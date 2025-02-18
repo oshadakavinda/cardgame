@@ -23,7 +23,7 @@ public class CardGameClient extends JFrame {
         // Score panel
         scorePanel = new JPanel(new GridLayout(1, 3));
         for (int i = 0; i < 3; i++) {
-            scoreLabels[i] = new JLabel("Player " + (i + 1) + ": 0", SwingConstants.CENTER);
+            scoreLabels[i] = new JLabel("Player " + (i + 1) + " score: 0", SwingConstants.CENTER);
             scorePanel.add(scoreLabels[i]);
         }
         scorePanel.setOpaque(true);
