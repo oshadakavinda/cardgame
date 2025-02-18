@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -186,7 +185,6 @@ public class CardGameClient extends JFrame {
         cardsPanel.revalidate();
     }
 
-
     private void enableCards(boolean enable) {
         SwingUtilities.invokeLater(() -> {
             for (JButton button : cardButtons) {
@@ -201,6 +199,23 @@ public class CardGameClient extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new CardGameClient("localhost", 12345));
+        String serverAddress = JOptionPane.showInputDialog(
+            null,
+            "Enter server IP address:",
+            "Connect to Server",
+            JOptionPane.QUESTION_MESSAGE
+        );
+        
+        if (serverAddress == null || serverAddress.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                null,
+                "Server address is required to connect.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+            System.exit(1);
+        }
+
+        SwingUtilities.invokeLater(() -> new CardGameClient(serverAddress, 12345));
     }
 }

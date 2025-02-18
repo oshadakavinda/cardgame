@@ -13,23 +13,45 @@ public class CardGameServer {
     private static final int MAX_ROUNDS = 5;
 
     public static void main(String[] args) {
+        System.out.println("Server public IP: " + getPublicIP());
         initializeDeck();
         startGame();
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server is running...");
+            System.out.println("Server is running on port " + PORT);
+            System.out.println("Waiting for players to connect...");
+
             while (players.size() < 3) {
-                Socket socket = serverSocket.accept();
-                PlayerHandler player = new PlayerHandler(socket, players.size());
-                players.add(player);
-                new Thread(player).start();
-                System.out.println("Player " + (players.size()) + " connected.");
+                try {
+                    Socket socket = serverSocket.accept();
+                    PlayerHandler player = new PlayerHandler(socket, players.size());
+                    players.add(player);
+                    new Thread(player).start();
+                    System.out.println("Player " + (players.size()) + " connected from " + 
+                        socket.getInetAddress().getHostAddress());
+                } catch (IOException e) {
+                    System.err.println("Error accepting player connection: " + e.getMessage());
+                }
             }
+
             dealCards();
             broadcast("GAME_START");
             players.get(currentPlayer).sendMessage("YOUR_TURN");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Server error: " + e.getMessage());
+            System.err.println("Make sure port " + PORT + " is open and available.");
+            System.exit(1);
+        }
+
+    }
+
+    private static String getPublicIP() {
+        try {
+            URL whatismyip = new URL("http://checkip.amazonaws.com");
+            BufferedReader in = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
+            return in.readLine();
+        } catch (Exception e) {
+            return "Could not determine public IP";
         }
     }
 
