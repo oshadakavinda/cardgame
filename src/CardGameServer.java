@@ -9,10 +9,12 @@ public class CardGameServer {
     private static int currentPlayer = 0;
     private static int[] scores = new int[3];
     private static Map<Integer, String> currentRound = new HashMap<>();
+    private static int roundCounter = 0;
+    private static final int MAX_ROUNDS = 5;
 
     public static void main(String[] args) {
         initializeDeck();
-        Collections.shuffle(deck);
+        startGame();
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Server is running...");
@@ -41,6 +43,13 @@ public class CardGameServer {
         }
     }
 
+    private static void startGame() {
+        Collections.shuffle(deck);
+        scores = new int[3];
+        roundCounter = 0;
+        currentRound.clear();
+    }
+
     private static void dealCards() {
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 3; j++) {
@@ -57,14 +66,21 @@ public class CardGameServer {
 
     public static synchronized void playCard(int playerIndex, String card) {
         currentRound.put(playerIndex, card);
-        broadcast("PLAYED:" + (playerIndex+1) + ":" + card);
+        broadcast("PLAYED:" + (playerIndex + 1) + ":" + card);
 
         if (currentRound.size() == 3) {
             evaluateRound();
             currentRound.clear();
             broadcastScores();
-            currentPlayer = determineNextPlayer();
-            players.get(currentPlayer).sendMessage("YOUR_TURN");
+            roundCounter++;
+
+            if (roundCounter >= MAX_ROUNDS) {
+                broadcast("GAME_OVER");
+                broadcast("FINAL_SCORES:" + scores[0] + "," + scores[1] + "," + scores[2]);
+            } else {
+                currentPlayer = determineNextPlayer();
+                players.get(currentPlayer).sendMessage("YOUR_TURN");
+            }
         } else {
             currentPlayer = (currentPlayer + 1) % 3;
             players.get(currentPlayer).sendMessage("YOUR_TURN");

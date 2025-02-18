@@ -6,14 +6,13 @@ import java.net.*;
 import java.util.*;
 import java.util.List;
 
-
 public class CardGameClient extends JFrame {
     private JPanel scorePanel, cardsPanel;
     private JTextArea logArea;
     private List<JButton> cardButtons = new ArrayList<>();
     private PrintWriter out;
-    private int playerNumber;
     private JLabel[] scoreLabels = new JLabel[3];
+    private JButton restartButton;
 
     public CardGameClient(String serverAddress, int port) {
         setTitle("Card Game Client");
@@ -24,9 +23,11 @@ public class CardGameClient extends JFrame {
         // Score panel
         scorePanel = new JPanel(new GridLayout(1, 3));
         for (int i = 0; i < 3; i++) {
-            scoreLabels[i] = new JLabel("Player " + (i+1) + ": 0", SwingConstants.CENTER);
+            scoreLabels[i] = new JLabel("Player " + (i + 1) + ": 0", SwingConstants.CENTER);
             scorePanel.add(scoreLabels[i]);
         }
+        scorePanel.setOpaque(true);
+        scorePanel.setBackground(new Color(240, 240, 240));
         add(scorePanel, BorderLayout.NORTH);
 
         // Cards panel
@@ -37,6 +38,19 @@ public class CardGameClient extends JFrame {
         logArea = new JTextArea(5, 20);
         logArea.setEditable(false);
         add(new JScrollPane(logArea), BorderLayout.SOUTH);
+
+        // Restart button (initially hidden)
+        restartButton = new JButton("Restart Game");
+        restartButton.setVisible(false);
+        restartButton.addActionListener(e -> {
+            out.println("RESTART");
+            restartButton.setVisible(false);
+            cardsPanel.removeAll();
+            cardButtons.clear();
+            cardsPanel.revalidate();
+            cardsPanel.repaint();
+        });
+        add(restartButton, BorderLayout.EAST);
 
         try {
             Socket socket = new Socket(serverAddress, port);
@@ -52,8 +66,15 @@ public class CardGameClient extends JFrame {
     private void updateScores(String[] scores) {
         SwingUtilities.invokeLater(() -> {
             for (int i = 0; i < 3; i++) {
-                scoreLabels[i].setText("Player " + (i+1) + ": " + scores[i]);
+                scoreLabels[i].setText("Player " + (i + 1) + ": " + scores[i]);
             }
+        });
+    }
+
+    private void showGameOver(String finalScores) {
+        SwingUtilities.invokeLater(() -> {
+            logArea.append("Game Over! Final Scores: " + finalScores + "\n");
+            restartButton.setVisible(true);
         });
     }
 
@@ -75,12 +96,22 @@ public class CardGameClient extends JFrame {
                     } else if (message.startsWith("PLAYED:")) {
                         String[] parts = message.split(":");
                         logArea.append("Player " + parts[1] + " played " + parts[2] + "\n");
+                        enableCards(false);
+                        SwingUtilities.invokeLater(() -> {
+                            scorePanel.setBorder(null);
+                        });
                     } else if (message.startsWith("SCORES:")) {
                         String[] scores = message.substring(7).split(",");
                         updateScores(scores);
                     } else if (message.equals("YOUR_TURN")) {
                         enableCards(true);
                         logArea.append("It's your turn! Select a card to play.\n");
+                        SwingUtilities.invokeLater(() -> {
+                            scorePanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
+                        });
+                    } else if (message.startsWith("FINAL_SCORES:")) {
+                        String finalScores = message.substring(13);
+                        showGameOver(finalScores);
                     }
                 }
             } catch (IOException e) {
@@ -107,6 +138,11 @@ public class CardGameClient extends JFrame {
         SwingUtilities.invokeLater(() -> {
             for (JButton button : cardButtons) {
                 button.setEnabled(enable);
+                if (enable) {
+                    button.setBackground(new Color(220, 255, 220)); // Light green for active turn
+                } else {
+                    button.setBackground(null); // Reset to default when not active
+                }
             }
         });
     }
