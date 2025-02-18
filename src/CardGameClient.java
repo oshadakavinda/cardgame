@@ -120,8 +120,60 @@ public class CardGameClient extends JFrame {
         }
     }
 
+    private class CardButton extends JButton {
+        private static final int ARC_SIZE = 15;
+        
+        public CardButton(String card) {
+            super(getCardEmoji(card));
+            setPreferredSize(new Dimension(80, 120));
+            setFont(new Font("Dialog", Font.BOLD, 16));
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.BLACK, 2),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            ));
+            setBackground(Color.WHITE);
+            setFocusPainted(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            // Draw rounded rectangle background
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), ARC_SIZE, ARC_SIZE);
+            
+            // Draw the border
+            if (getBorder() != null) {
+                g2.setColor(Color.BLACK);
+                g2.drawRoundRect(1, 1, getWidth()-3, getHeight()-3, ARC_SIZE, ARC_SIZE);
+            }
+            
+            super.paintComponent(g2);
+            g2.dispose();
+        }
+        
+        private static String getCardEmoji(String card) {
+            // Convert card string to emoji representation
+            String suit = card.substring(card.length() - 1);
+            String value = card.substring(0, card.length() - 1);
+            
+            String suitEmoji = switch(suit) {
+                case "\u2660" -> "\u2660\uFE0F";
+                case "\u2663" -> "\u2663\uFE0F";
+                case "\u2665" -> "\u2665\uFE0F";
+                case "\u2666" -> "\u2666\uFE0F";
+
+                default -> suit;
+            };
+            
+            return String.format("<html><center>%s<br>%s</center></html>", value, suitEmoji);
+        }
+    }
+
     private void addCardButton(String card) {
-        JButton button = new JButton(card);
+        JButton button = new CardButton(card);
         button.setEnabled(false);
         button.addActionListener(e -> {
             out.println("PLAY:" + card);
@@ -133,6 +185,7 @@ public class CardGameClient extends JFrame {
         cardsPanel.add(button);
         cardsPanel.revalidate();
     }
+
 
     private void enableCards(boolean enable) {
         SwingUtilities.invokeLater(() -> {
