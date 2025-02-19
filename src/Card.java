@@ -16,23 +16,22 @@ public class Card extends JPanel {
         this.cardType = cardType;
         this.cardValue = cardValue;
 
-        setPreferredSize(new Dimension(150, 220)); // Increased card size
+        setPreferredSize(new Dimension(150, 220));
         setLayout(new BorderLayout());
 
         loadSuitIcons();
 
-        // Value Label (Center)
-        JLabel leftValueLabel = new JLabel(cardValue);
-        leftValueLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        leftValueLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        add(leftValueLabel, BorderLayout.NORTH);
-
-        JLabel rightValueLabel = new JLabel(cardValue);
-        rightValueLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        rightValueLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        add(rightValueLabel, BorderLayout.SOUTH);
-
-        // Suit Icon (North)
+        // Value Label (Left)
+        JLabel valueLabel = new JLabel(cardValue);
+        valueLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        valueLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        add(valueLabel, BorderLayout.NORTH);
+        // Value Label (Right)
+        JLabel valueLabelRight = new JLabel(cardValue);
+        valueLabelRight.setFont(new Font("Arial", Font.BOLD, 20));
+        valueLabelRight.setHorizontalAlignment(SwingConstants.RIGHT);
+        add(valueLabelRight, BorderLayout.SOUTH);
+        // Suit Icon (Center)
         JLabel suitLabelNorth = new JLabel(suitIcons.get(cardType));
         if (suitLabelNorth != null) {
             suitLabelNorth.setHorizontalAlignment(SwingConstants.CENTER);
@@ -45,7 +44,7 @@ public class Card extends JPanel {
 
         setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.BLACK, 2),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10) // Adjust border padding if needed
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         setBackground(Color.WHITE);
     }

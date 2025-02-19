@@ -4,16 +4,16 @@ import java.util.*;
 
 public class CardGameServer {
     private static final int PORT = 12345;
-    private static List<PlayerHandler> players = new ArrayList<>();
-    private static List<String> deck = new ArrayList<>();
+    private static final List<PlayerHandler> players = new ArrayList<>();
+    private static final List<String> deck = new ArrayList<>();
     private static int currentPlayer = 0;
-    private static int[] scores = new int[3];
-    private static Map<Integer, String> currentRound = new HashMap<>();
+    private static final int[] scores = new int[3];
+    private static final Map<Integer, String> currentRound = new HashMap<>();
     private static int roundCounter = 0;
     private static final int MAX_ROUNDS = 5;
 
     public static void main(String[] args) {
-        System.out.println("Server public IP: " + getPublicIP());
+        System.out.println("Server private IP: " + getPrivateIP());
         initializeDeck();
         startGame();
 
@@ -27,8 +27,8 @@ public class CardGameServer {
                     PlayerHandler player = new PlayerHandler(socket, players.size());
                     players.add(player);
                     new Thread(player).start();
-                    System.out.println("Player " + (players.size()) + " connected from " + 
-                        socket.getInetAddress().getHostAddress());
+                    System.out.println("Player " + (players.size()) + " connected from " +
+                            socket.getInetAddress().getHostAddress());
                 } catch (IOException e) {
                     System.err.println("Error accepting player connection: " + e.getMessage());
                 }
@@ -39,25 +39,21 @@ public class CardGameServer {
             players.get(currentPlayer).sendMessage("YOUR_TURN");
         } catch (IOException e) {
             System.err.println("Server error: " + e.getMessage());
-            System.err.println("Make sure port " + PORT + " is open and available.");
             System.exit(1);
         }
-
     }
 
-    private static String getPublicIP() {
+    private static String getPrivateIP() {
         try {
-            URL whatismyip = new URL("http://checkip.amazonaws.com");
-            BufferedReader in = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
-            return in.readLine();
-        } catch (Exception e) {
-            return "Could not determine public IP";
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            return "Could not determine private IP";
         }
     }
 
     private static void initializeDeck() {
-        String[] suits = {"Spades", "Hearts", "Diamonds", "Clubs"};
-        String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"};
+        String[] suits = {"S", "H", "D", "C"};
+        String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"};
         for (String suit : suits) {
             for (String rank : ranks) {
                 deck.add(rank + " of " + suit);
@@ -67,7 +63,7 @@ public class CardGameServer {
 
     private static void startGame() {
         Collections.shuffle(deck);
-        scores = new int[3];
+        Arrays.fill(scores, 0);
         roundCounter = 0;
         currentRound.clear();
     }
@@ -172,20 +168,16 @@ public class CardGameServer {
 }
 
 class PlayerHandler implements Runnable {
-    private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
-    private int playerIndex;
+    private final Socket socket;
+    private final PrintWriter out;
+    private final BufferedReader in;
+    private final int playerIndex;
 
-    public PlayerHandler(Socket socket, int index) {
+    public PlayerHandler(Socket socket, int index) throws IOException {
         this.socket = socket;
         this.playerIndex = index;
-        try {
-            out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.out = new PrintWriter(socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
     @Override
