@@ -16,7 +16,7 @@ public class Card extends JPanel {
         this.cardType = cardType;
         this.cardValue = cardValue;
 
-        setPreferredSize(new Dimension(150, 220));
+        setPreferredSize(new Dimension(100, 180));
         setLayout(new BorderLayout());
 
         loadSuitIcons();

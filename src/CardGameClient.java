@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CardGameClient extends JFrame {
-    private static final String SERVER_IP = "192.168.1.9"; // Replace with your server's IP
-    private static final int SERVER_PORT = 12345;
+    private static final int SERVER_PORT = 12345; // Default server port
+    private String serverIP; // Server IP provided by the user
 
     private JPanel scorePanel, cardsPanel;
     private JTextArea logArea;
@@ -16,8 +16,15 @@ public class CardGameClient extends JFrame {
     private PrintWriter out;
     private JLabel[] scoreLabels = new JLabel[3];
     private JButton restartButton;
+    private int cardsPlayedThisRound = 0; // Track cards played in the current round
 
-    public CardGameClient() {
+    public CardGameClient(String serverIP) {
+        this.serverIP = serverIP;
+        initializeUI();
+        connectToServer();
+    }
+
+    private void initializeUI() {
         setTitle("Card Game Client");
         setSize(700, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -60,10 +67,11 @@ public class CardGameClient extends JFrame {
             cardsPanel.repaint();
         });
         add(restartButton, BorderLayout.EAST);
+    }
 
-        // Connect to Server
+    private void connectToServer() {
         try {
-            Socket socket = new Socket(SERVER_IP, SERVER_PORT);
+            Socket socket = new Socket(serverIP, SERVER_PORT);
             out = new PrintWriter(socket.getOutputStream(), true);
             new Thread(new ServerListener(socket)).start();
         } catch (IOException e) {
@@ -116,6 +124,7 @@ public class CardGameClient extends JFrame {
         } else if (message.startsWith("SCORES:")) {
             updateScores(message.substring(7).split(","));
         } else if (message.equals("YOUR_TURN")) {
+            cardsPlayedThisRound = 0; // Reset cards played for the new round
             enableCards(true);
             logArea.append("It's your turn! Select a card to play.\n");
         } else if (message.startsWith("FINAL_SCORES:")) {
@@ -130,11 +139,16 @@ public class CardGameClient extends JFrame {
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                out.println("PLAY:" + cardData);
-                cardsPanel.remove(card);
-                cardsPanel.revalidate();
-                cardsPanel.repaint();
-                enableCards(false);
+                if (cardsPlayedThisRound < 1) { // Allow only 1 card per round
+                    out.println("PLAY:" + cardData);
+                    cardsPanel.remove(card);
+                    cardsPanel.revalidate();
+                    cardsPanel.repaint();
+                    enableCards(false);
+                    cardsPlayedThisRound++;
+                } else {
+                    logArea.append("You can only play 1 card per round.\n");
+                }
             }
         });
 
@@ -168,6 +182,23 @@ public class CardGameClient extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(CardGameClient::new);
+        String serverIP = JOptionPane.showInputDialog(
+            null,
+            "Enter server IP address:",
+            "Connect to Server",
+            JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (serverIP == null || serverIP.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                null,
+                "Server address is required to connect.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+            System.exit(1);
+        }
+
+        SwingUtilities.invokeLater(() -> new CardGameClient(serverIP));
     }
 }
