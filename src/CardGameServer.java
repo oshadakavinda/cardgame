@@ -83,11 +83,18 @@ public class CardGameServer {
     }
 
     public static synchronized void playCard(int playerIndex, String card) {
+        if (currentRound.containsKey(playerIndex)) {
+            players.get(playerIndex).sendMessage("ERROR: You can only play 1 card per round");
+            return;
+        }
+        
         currentRound.put(playerIndex, card);
         broadcast("PLAYED:" + (playerIndex + 1) + ":" + card);
 
         if (currentRound.size() == 3) {
+
             evaluateRound();
+            int nextPlayer = determineNextPlayer();
             currentRound.clear();
             broadcastScores();
             roundCounter++;
@@ -96,27 +103,40 @@ public class CardGameServer {
                 broadcast("GAME_OVER");
                 broadcast("FINAL_SCORES:" + scores[0] + "," + scores[1] + "," + scores[2]);
             } else {
-                currentPlayer = determineNextPlayer();
-                players.get(currentPlayer).sendMessage("YOUR_TURN");
+            currentPlayer = nextPlayer;
+            broadcast("TURN:" + (currentPlayer + 1));
+            players.get(currentPlayer).sendMessage("YOUR_TURN");
+            try { Thread.sleep(50); } catch (InterruptedException e) { /* Ignore */ }
+
             }
+
         } else {
             currentPlayer = (currentPlayer + 1) % 3;
+            broadcast("TURN:" + (currentPlayer + 1));
             players.get(currentPlayer).sendMessage("YOUR_TURN");
+            try { Thread.sleep(50); } catch (InterruptedException e) { /* Ignore */ }
+
+
         }
     }
 
     private static int determineNextPlayer() {
         int maxValue = -1;
-        int winner = 0;
+        int winner = currentPlayer; // Default to current player if no valid plays
         for (Map.Entry<Integer, String> entry : currentRound.entrySet()) {
             int value = getCardValue(entry.getValue());
             if (value > maxValue) {
                 maxValue = value;
                 winner = entry.getKey();
+            } else if (value == maxValue) {
+                winner = breakTie(winner, entry.getKey());
             }
         }
-        return winner;
+        // Ensure winner is always a valid player index
+        return Math.max(0, Math.min(winner, 2));
     }
+
+
 
     private static void evaluateRound() {
         int maxValue = -1;
