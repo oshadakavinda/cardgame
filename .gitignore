@@ -1,0 +1,29 @@
+# Ignore all .class files
+*.class
+
+# Ignore bin and out directories
+/bin/
+/out/
+
+# Ignore IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignore Eclipse files
+.settings/
+.project
+.classpath
+
+# Ignore NetBeans files
+nbproject/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Ignore VSCode files
+.vscode/
