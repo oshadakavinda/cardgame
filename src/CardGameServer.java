@@ -106,7 +106,7 @@ public class CardGameServer {
             currentPlayer = nextPlayer;
             broadcast("TURN:" + (currentPlayer + 1));
             players.get(currentPlayer).sendMessage("YOUR_TURN");
-            try { Thread.sleep(50); } catch (InterruptedException e) { /* Ignore */ }
+            
 
             }
 
@@ -114,7 +114,7 @@ public class CardGameServer {
             currentPlayer = (currentPlayer + 1) % 3;
             broadcast("TURN:" + (currentPlayer + 1));
             players.get(currentPlayer).sendMessage("YOUR_TURN");
-            try { Thread.sleep(50); } catch (InterruptedException e) { /* Ignore */ }
+           
 
 
         }
@@ -163,10 +163,10 @@ public class CardGameServer {
         String[] parts = card.split(" ");
         String rank = parts[0];
         return switch (rank) {
-            case "Jack" -> 11;
-            case "Queen" -> 12;
-            case "King" -> 13;
-            case "Ace" -> 14;
+            case "J" -> 11;
+            case "Q" -> 12;
+            case "K" -> 13;
+            case "A" -> 14;
             default -> Integer.parseInt(rank);
         } * 10 + getSuitValue(card);
     }
@@ -174,10 +174,10 @@ public class CardGameServer {
     private static int getSuitValue(String card) {
         String suit = card.split(" of ")[1];
         return switch (suit) {
-            case "Spades" -> 4;
-            case "Hearts" -> 3;
-            case "Diamonds" -> 2;
-            case "Clubs" -> 1;
+            case "S" -> 4;
+            case "H" -> 3;
+            case "D" -> 2;
+            case "C" -> 1;
             default -> 0;
         };
     }
